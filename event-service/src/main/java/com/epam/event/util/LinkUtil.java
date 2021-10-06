@@ -1,14 +1,29 @@
 package com.epam.event.util;
 
-public final class LinkUtil {
+import com.epam.event.contracts.Event;
+import org.springframework.hateoas.Link;
+import org.springframework.stereotype.Component;
 
-    public static final String COLLECTION = "collection";
-    public static final String NEXT = "next";
-    public static final String PREV = "prev";
-    public static final String FIRST = "first";
-    public static final String LAST = "last";
+import java.util.List;
 
-    public static String createLinkHeader(final String uri, final String rel) {
-        return "<" + uri + ">; rel=\"" + rel + "\"";
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+
+@Component
+public class LinkUtil {
+
+    public static Link addLinks(Class<?> type, final List<Event> events) {
+        for (final Event event : events) {
+            String eventId = event.getId().toString();
+            Link selfLink = linkTo(type).slash(eventId).withSelfRel();
+            event.add(selfLink);
+        }
+        return linkTo(type).withSelfRel();
+    }
+
+    public static Link addLinks(Class<?> type, final Event event) {
+        String eventId = event.getId().toString();
+        Link selfLink = linkTo(type).slash(eventId).withSelfRel();
+        event.add(selfLink);
+        return linkTo(type).withSelfRel();
     }
 }

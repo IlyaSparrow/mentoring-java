@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static com.epam.event.util.LinkUtil.addLinks;
 
 @RestController
 @Tag(name = "events")
@@ -32,32 +34,28 @@ public class EventsController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponse(responseCode = "201", description = "Event was successfully created.")
     @ApiResponse(responseCode = "400", description = "The request was invalid.")
-    public Event createEvent(@RequestBody Event eventEntity) {
-        return eventService.createEvent(eventEntity);
+    public EntityModel<Event> createEvent(@RequestBody Event eventEntity) {
+        Event event = eventService.createEvent(eventEntity);
+        Link link = addLinks(EventsController.class, event);
+
+        return EntityModel.of(event, link);
     }
 
-    @GetMapping
+    @GetMapping(value = "/all")
     @ApiResponse(responseCode = "200", description = "Events were successfully received.")
     @ApiResponse(responseCode = "400", description = "The request was invalid.")
     public CollectionModel<Event> getAllEvents() {
         final List<Event> events = eventService.getAllEvents();
-
-        for (final Event event : events) {
-            String customerId = event.getId().toString();
-            Link selfLink = linkTo(EventsController.class).slash(customerId)
-                    .withSelfRel();
-            event.add(selfLink);
-        }
-
-        Link link = linkTo(EventsController.class).withSelfRel();
-        CollectionModel<Event> result = CollectionModel.of(events, link);
-        return result;
+        Link link = addLinks(EventsController.class, events);
+        return CollectionModel.of(events, link);
     }
 
     @GetMapping(params = {"title"})
     @ApiResponse(responseCode = "200", description = "Events were successfully received.")
     @ApiResponse(responseCode = "400", description = "The request was invalid.")
-    public List<Event> getAllEventsByTitle(@RequestParam("title") String title) {
-        return eventService.getAllEventsByTitle(title);
+    public CollectionModel<Event> getAllEventsByTitle(@RequestParam("title") String title) {
+        final List<Event> events = eventService.getAllEventsByTitle(title);
+        Link link = addLinks(EventsController.class, events);
+        return CollectionModel.of(events, link);
     }
 }
