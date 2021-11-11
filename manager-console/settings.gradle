@@ -1,0 +1,4 @@
+rootProject.name = 'manager-console'
+
+include 'org.sprignframework.boot:spring-boot-starter-parent:2.5.5'
+
